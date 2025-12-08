@@ -2,14 +2,15 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ENV_KEYS } from 'src/back-end/core/config/env-keys';
-import { UserEntity } from 'src/back-end/core/db/entities/user-entity';
 import { RedisTokenService } from './redis-service';
 import { UserService } from './user-service';
+import { GenerateTokenDto } from '../dto/generate-token.dto';
 
 @Injectable()
 export class TokenGenerationService {
@@ -20,9 +21,8 @@ export class TokenGenerationService {
     @Inject(forwardRef(() => RedisTokenService))
     private redisService: RedisTokenService,
   ) {}
-
-  async generateTokens(user: UserEntity) {
-    const userData = await this.userService.findOne(user);
+  async generateTokens(dto: GenerateTokenDto) {
+    const userData = await this.userService.findOne(dto.id);
     if (!userData) {
       throw new NotFoundException('Пользователь не найден');
     }
@@ -49,8 +49,17 @@ export class TokenGenerationService {
       refreshToken,
     };
   }
+  validateToken(token: string) {
+    const secret = this.configService.get<string>(ENV_KEYS.JWT_SECRET);
+    try {
+      const payload = this.jwtService.verify(token, { secret });
+      return payload;
+    } catch (err) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 
-  async calculateExpTime(token: string) {
+  calculateExpTime(token: string) {
     const decoded = this.jwtService.decode(token);
     const now = Math.floor(Date.now() / 1000);
     return decoded.exp - now;

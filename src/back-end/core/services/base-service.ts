@@ -1,6 +1,14 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Entity, ObjectLiteral, Repository } from 'typeorm';
+import {
+  Entity,
+  ObjectLiteral,
+  Repository,
+  FindOneOptions,
+  FindOptionsWhere,
+  DeepPartial,
+  FindManyOptions,
+} from 'typeorm';
 
 export abstract class BaseService<Entity extends ObjectLiteral> {
   constructor(
@@ -8,25 +16,55 @@ export abstract class BaseService<Entity extends ObjectLiteral> {
     protected repository: Repository<Entity>,
   ) {}
 
-  async createOne(dto: Entity) {
+  async createOne(dto: DeepPartial<Entity>) {
     try {
       const createdObject = this.repository.create(dto);
       const savedObject = await this.repository.save(createdObject);
       return savedObject;
     } catch (error) {
-      throw new BadRequestException('Ошибка при получении даныых');
+      throw new BadRequestException('Error while fetching data');
     }
   }
 
-  async findOne(dto: Entity) {
+  async findOne(id: number, options?: FindOneOptions<Entity>) {
     try {
-      const searchedEntity = this.repository.findOne({ where: { id: dto.id } });
+      const whereCondition = {
+        id,
+        ...options?.where,
+      } as FindOptionsWhere<Entity>;
+      const searchedEntity = this.repository.findOne({
+        ...options,
+        where: whereCondition,
+      });
       if (!searchedEntity) {
         throw new NotFoundException();
       }
       return searchedEntity;
     } catch (error) {
-      throw new BadRequestException('Ошибка при получении даныых');
+      throw new BadRequestException('Error while fetching data');
+    }
+  }
+
+  async findOneBy(options: FindOptionsWhere<Entity>) {
+    try {
+      const searchedEntity = this.repository.findOneBy(options);
+      if (!searchedEntity) {
+        throw new NotFoundException();
+      }
+      return searchedEntity;
+    } catch (error) {
+      throw new BadRequestException('Error while fetching data');
+    }
+  }
+  async findAll(options?: FindManyOptions<Entity>) {
+    try {
+      const allUsers = await this.repository.find(options);
+      if (!allUsers) {
+        throw new NotFoundException();
+      }
+      return allUsers;
+    } catch (error) {
+      throw new BadRequestException('Error while fetching data');
     }
   }
 }

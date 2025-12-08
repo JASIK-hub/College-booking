@@ -15,7 +15,7 @@ export class RedisTokenService {
     this.redis = this.redisService.getOrThrow();
   }
   async setRefreshToken(token: string) {
-    const expTime = await this.tokenService.calculateExpTime(token);
+    const expTime = this.tokenService.calculateExpTime(token);
     const key = `token:${token}`;
     this.redis.set(key, token, 'EX', expTime);
   }

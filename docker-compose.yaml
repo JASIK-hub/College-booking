@@ -18,25 +18,25 @@ services:
     restart: always
     ports:
       - '6380:6379'
-  nest:
-    build: .
-    container_name: college_nest
-    restart: always
-    volumes:
-      - .:/app
-    ports:
-      - '3000:3000'
-    environment:
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: 1234567
-      DATABASE_NAME: collegedb
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      - postgres
-      - redis
+  # nest:
+  #   build: .
+  #   container_name: college_nest
+  #   restart: always
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     DATABASE_HOST: postgres
+  #     DATABASE_PORT: 5432
+  #     DATABASE_USER: postgres
+  #     DATABASE_PASSWORD: 1234567
+  #     DATABASE_NAME: collegedb
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #   depends_on:
+  #     - postgres
+  #     - redis
 
 volumes:
   postgres_data:
