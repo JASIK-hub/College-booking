@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BookingEntity } from './booking.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('user')
 export class UserEntity {
@@ -15,9 +16,13 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, select: false })
+  @Exclude()
   password: string;
 
   @Column()
   phone: string;
+
+  @OneToMany(() => BookingEntity, (booking) => booking.user)
+  bookings: BookingEntity[];
 }

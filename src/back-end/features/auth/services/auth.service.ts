@@ -7,8 +7,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'node_modules/bcryptjs';
 import { ENV_KEYS } from 'src/back-end/core/config/env-keys';
-import { TokenGenerationService } from './token-service';
-import { UserService } from './user-service';
+import { TokenGenerationService } from './token.service';
+import { UserService } from './user.service';
 import { UserLoginDto } from '../dto/login.dto';
 import { GenerateTokenDto } from '../dto/generate-token.dto';
 import { UserDto } from '../dto/user.dto';

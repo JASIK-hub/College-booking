@@ -1,7 +1,7 @@
 import { RedisService } from '@liaoliaots/nestjs-redis';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
-import { TokenGenerationService } from './token-service';
+import { TokenGenerationService } from './token.service';
 
 @Injectable()
 export class RedisTokenService {

@@ -8,8 +8,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ENV_KEYS } from 'src/back-end/core/config/env-keys';
-import { RedisTokenService } from './redis-service';
-import { UserService } from './user-service';
+import { RedisTokenService } from './redis.service';
+import { UserService } from './user.service';
 import { GenerateTokenDto } from '../dto/generate-token.dto';
 
 @Injectable()

@@ -1,8 +1,8 @@
-import { In } from 'typeorm';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { LocationSeed } from './back-end/core/seeds/location.seed';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +14,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  const seed = app.get(LocationSeed);
+  await seed.run();
+
   const config = new DocumentBuilder()
     .setDescription('  :)  ')
     .setTitle('College Booking')
