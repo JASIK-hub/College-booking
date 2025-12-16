@@ -1,8 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum } from 'class-validator';
+import { IsDateString, IsEnum, IsString } from 'class-validator';
 import { LocationsEnum } from 'src/core/db/enums/locations-enum.dto';
 
 export class BookingDto {
+  @ApiProperty({
+    description: 'description for booking',
+    nullable: true,
+  })
+  @IsString()
+  description: string;
+
   @ApiProperty({
     description: 'location in building',
     nullable: false,

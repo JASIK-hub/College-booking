@@ -18,6 +18,9 @@ export class BookingEntity {
   @JoinColumn({ name: 'locationId' })
   location: LocationEntity;
 
+  @Column({ nullable: true })
+  description: string;
+
   @ManyToOne(() => UserEntity, (user) => user.bookings)
   @JoinColumn({ name: 'userId' })
   user: UserEntity;

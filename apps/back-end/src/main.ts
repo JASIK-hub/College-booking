@@ -14,6 +14,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
   const seed = app.get(LocationSeed);
   await seed.run();
 

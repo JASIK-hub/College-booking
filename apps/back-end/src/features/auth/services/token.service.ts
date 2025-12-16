@@ -29,11 +29,13 @@ export class TokenGenerationService {
     const payloadAccess = {
       id: userData.id,
       identifier: userData.email,
+      role: userData.role,
       type: 'access',
     };
     const payloadRefresh = {
       id: userData.id,
       identifier: userData.email,
+      role: userData.role,
       type: 'refresh',
     };
 

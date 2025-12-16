@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BookingEntity } from './booking.entity';
 import { Exclude } from 'class-transformer';
+import { RoleEnum } from '../enums/role-enum';
 
 @Entity('user')
 export class UserEntity {
@@ -22,6 +23,9 @@ export class UserEntity {
 
   @Column()
   phone: string;
+
+  @Column({ nullable: false, enum: RoleEnum })
+  role: RoleEnum;
 
   @OneToMany(() => BookingEntity, (booking) => booking.user)
   bookings: BookingEntity[];

@@ -1,15 +1,28 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Input } from "../ui/search";
 import { Button } from "../ui/button";
+import { useAuth } from "../../hooks/useAuth";
+import Spinner from "../ui/spinner";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { submit, loading, error } = useAuth({
+    path: `/user/login`,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password });
+    const result = await submit({ email, password });
+    
+    if (result && !error) {
+      localStorage.setItem('isAuthenticated', 'true');
+      navigate("/main");
+    }
   };
 
   return (
@@ -20,12 +33,8 @@ export default function Login() {
       >
         {/* Title */}
         <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Welcome back
-          </h1>
-          <p className="text-sm text-gray-500">
-            Sign in to your account
-          </p>
+          <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
+          <p className="text-sm text-gray-500">Sign in to your account</p>
         </div>
 
         {/* Email */}
@@ -51,19 +60,28 @@ export default function Login() {
             focus:border-black focus:ring-1 focus:ring-black outline-none
             transition"
         />
+        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
-        {/* Button */}
         <Button
           type="submit"
           variant="primary"
-          className="w-full py-2 rounded-lg font-medium transition hover:opacity-90"
+          disabled={loading}
+          className="w-full py-2 rounded-lg font-medium transition
+                    flex items-center justify-center gap-2
+                    disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Sign in
+          {loading ? (
+            <>
+              <Spinner />
+              Signing in...
+            </>
+          ) : (
+            "Sign in"
+          )}
         </Button>
 
-        {/* Footer */}
         <p className="text-sm text-center text-gray-500">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <Link
             to="/register"
             className="text-black font-medium hover:underline"

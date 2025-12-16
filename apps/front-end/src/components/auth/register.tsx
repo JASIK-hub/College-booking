@@ -2,6 +2,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "../ui/search";
 import { Button } from "../ui/button";
+import { useAuth } from "../../hooks/useAuth";
+
+interface RegisterPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  role: Role;
+}
+
+type Role = "admin" | "teacher";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -11,39 +23,34 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [userExists, setUserExists] = useState(false);
+  const [role, setRole] = useState<Role>("teacher");
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { submit, loading, error } = useAuth<RegisterPayload>({
+    path: "/user/register",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
+    setUserExists(false);
+    
     try {
-      const res = await fetch("http://localhost:3000/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          phone,
-          email,
-          password,
-        }),
+      const res=await submit({
+        firstName,
+        lastName,
+        phone,
+        email,
+        password,
+        role,
       });
-
-      if (!res.ok) {
-        throw new Error("Registration failed");
-      }
-
+      console.log('ok',res)
       navigate("/login");
-    } catch (err: any) {
-      setError(err.message || "Error");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.log('false',err)
+      // Обрабатываем ошибку
+      if (error === "User already exists") {
+        setUserExists(true);
+      }
     }
   };
 
@@ -58,14 +65,8 @@ export default function Register() {
           <h1 className="text-2xl font-semibold text-gray-900">
             Create account
           </h1>
-          <p className="text-sm text-gray-500">
-            Fill in your details
-          </p>
+          <p className="text-sm text-gray-500">Fill in your details</p>
         </div>
-
-        {error && (
-          <p className="text-sm text-red-500 text-center">{error}</p>
-        )}
 
         <Input
           placeholder="First name"
@@ -103,6 +104,21 @@ export default function Register() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
+        {userExists && (
+          <p className="text-sm text-red-500 text-center">
+            User already exists
+          </p>
+        )}
+
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as Role)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
+        >
+          <option value="teacher">Teacher</option>
+          <option value="admin">Admin</option>
+        </select>
 
         <Button
           type="submit"

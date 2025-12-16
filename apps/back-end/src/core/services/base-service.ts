@@ -26,7 +26,7 @@ export abstract class BaseService<Entity extends ObjectLiteral> {
     }
   }
 
-  async findOne(id: number, options?: FindOneOptions<Entity>) {
+  async findOne(id?: number, options?: FindOneOptions<Entity>) {
     try {
       const whereCondition = {
         id,
@@ -66,5 +66,15 @@ export abstract class BaseService<Entity extends ObjectLiteral> {
     } catch (error) {
       throw new BadRequestException('Error while fetching data');
     }
+  }
+
+  async updateOne(id: number, dto: DeepPartial<Entity>) {
+    const entity = await this.repository.findOne({ where: { id } as any });
+    if (!entity) {
+      throw new NotFoundException('Entity not found');
+    }
+
+    this.repository.update(id, dto as any);
+    return await this.repository.findOne({ where: { id } as any });
   }
 }

@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsPhoneNumber, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsPhoneNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { RoleEnum } from 'src/core/db/enums/role-enum';
 
 export class UserDto {
   @ApiProperty({ description: 'First name', type: String })
@@ -22,4 +29,8 @@ export class UserDto {
   @ApiProperty({ description: 'User phone number' })
   @IsPhoneNumber('KZ')
   phone: string;
+
+  @ApiProperty({ description: 'Role' })
+  @IsEnum(RoleEnum)
+  role: RoleEnum;
 }

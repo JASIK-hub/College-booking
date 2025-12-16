@@ -12,7 +12,6 @@ import { UserService } from './user.service';
 import { UserLoginDto } from '../dto/login.dto';
 import { GenerateTokenDto } from '../dto/generate-token.dto';
 import { UserDto } from '../dto/user.dto';
-import { UserResponseDto } from '../dto/response/user-response.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,7 +20,10 @@ export class AuthService {
     private tokenService: TokenGenerationService,
   ) {}
   async registerUser(dto: UserDto) {
-    const userExists = await this.userService.findOneBy({ email: dto.email });
+    const userExists = await this.userService.findOneBy({
+      email: dto.email,
+      firstName: dto.firstName,
+    });
     if (userExists) {
       throw new BadRequestException('User already exists');
     }
@@ -30,43 +32,46 @@ export class AuthService {
       ...dto,
       password: hashedPassword,
     });
+    return await this.userService.findOneBy({ email: dto.email });
   }
   async loginUser(dto: UserLoginDto) {
-    const user = await this.userService.findOneBy({ email: dto.email });
+    const user = await this.userService.findOne(undefined, {
+      where: { email: dto.email },
+      select: ['id', 'email', 'password'],
+    });
     if (!user) {
       throw new UnauthorizedException('User is not authorized');
     }
     await this.validatePassword(dto.password, user.password);
     const userPayload: GenerateTokenDto = {
       id: user.id,
+      role: user.role,
       email: user.email,
     };
     return await this.tokenService.generateTokens(userPayload);
   }
 
-  async getSingleUserInfo(userId: number): Promise<UserResponseDto> {
+  async getSingleUserInfo(userId: number) {
     const user = await this.userService.findOneBy({ id: userId });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-    };
+    return user;
   }
-  async getAllUsersInfo(): Promise<UserResponseDto[]> {
+  async getAllUsersInfo() {
     const users = await this.userService.findAll();
     if (!users) {
       throw new NotFoundException('No users found');
     }
-    return users.map((user) => ({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-    }));
+    return users;
+  }
+  async changeUserInfo(userId: number, dto: UserDto) {
+    let user = await this.userService.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    this.userService.updateOne(userId, dto);
+    return await this.userService.findOneBy({ id: userId });
   }
 
   async hashPassword(password: string) {
