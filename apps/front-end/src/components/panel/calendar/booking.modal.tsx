@@ -9,6 +9,7 @@ interface BookingModalProps {
   startTime: Date;
   endTime: Date;
   location: string;
+  error:any
 }
 
 export const BookingModal: React.FC<BookingModalProps> = ({
@@ -18,6 +19,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   startTime: initialStartTime,
   endTime: initialEndTime,
   location,
+  error
 }) => {
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState(format(initialStartTime, "HH:mm"));
@@ -125,9 +127,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 mt-3 text-center">
-          Нажмите Enter для создания
+        {error &&(<p className="text-xs text-red-500 mt-3 text-center">
+          {error}
         </p>
+  )}
       </div>
     </div>
   );

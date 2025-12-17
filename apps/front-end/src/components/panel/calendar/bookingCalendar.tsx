@@ -35,6 +35,8 @@ export const BookingCalendar: React.FC = () => {
   } = useCalendarNavigation("week");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+
   const [pendingBooking, setPendingBooking] = useState<{
     start: Date;
     end: Date;
@@ -76,14 +78,21 @@ export const BookingCalendar: React.FC = () => {
         description
       );
       setIsModalOpen(false);
+      setBookingError(null);
       setPendingBooking(null);
-    } catch (err) {
+    } catch (err:any) {
+      if (err?.status === 400 || err?.message) {
+      setBookingError("Бронирование запрещено на выбранное время");
+    } else {
+      setBookingError("Произошла ошибка при бронировании");
+    }
     }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setPendingBooking(null);
+    setBookingError(null);
   };
 
   const handleCloseDetailsModal = () => {
@@ -145,6 +154,7 @@ const calendarMax=getCalendarMax(date)
           startTime={pendingBooking.start}
           endTime={pendingBooking.end}
           location={pendingBooking.location}
+          error={bookingError}
         />
       )}
 
