@@ -27,7 +27,6 @@ export function useApi() {
         const errData = await res.json();
         throw new Error(errData.message || "Ошибка запроса");
       }
-
       return (await res.json()) as R;
     } catch (err: any) {
       setError(err.message);

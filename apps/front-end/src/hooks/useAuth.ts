@@ -29,7 +29,6 @@ export function useAuth<TPayload>({ path }: UseAuthOptions) {
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
       }
-      console.log("data", data);
       return data;
     } catch (err: any) {
       setError(err.message);

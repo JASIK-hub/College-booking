@@ -46,8 +46,6 @@ export default function Register() {
       console.log('ok',res)
       navigate("/login");
     } catch (err) {
-      console.log('false',err)
-      // Обрабатываем ошибку
       if (error === "User already exists") {
         setUserExists(true);
       }

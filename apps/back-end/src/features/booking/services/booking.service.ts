@@ -78,7 +78,7 @@ export class BookingService extends BaseService<BookingEntity> {
       relations: ['user', 'location'],
     });
     if (!bookings.length) {
-      throw new NotFoundException('No bookings found for the given criteria');
+      return [];
     }
     return bookings;
   }

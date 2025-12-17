@@ -34,8 +34,11 @@ export const useBookingManager = () => {
           author: `${b.user.firstName} ${b.user.lastName}`,
         }))
       );
-    } catch (err) {
-      console.error("Ошибка загрузки бронирований:", err);
+    } catch (err: any) {
+      if (err) {
+        setBookings([]);
+      } else {
+      }
     }
   };
 
