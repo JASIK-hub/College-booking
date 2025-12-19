@@ -36,7 +36,7 @@ export default function Register() {
     setUserExists(false);
     
     try {
-      const res=await submit({
+      await submit({
         firstName,
         lastName,
         phone,
