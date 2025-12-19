@@ -114,6 +114,7 @@ http://localhost:3000
 
 Frontend задеплоен на **Vercel**
 Backend задеплоен на **Render**
+Swagger доступен по ссылке : https://college-booking-c0a6.onrender.com/docs
 Для продакшна используется переменная окружения:
 
 ```env
