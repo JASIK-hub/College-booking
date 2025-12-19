@@ -25,6 +25,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [userExists, setUserExists] = useState(false);
   const [role, setRole] = useState<Role>("teacher");
+  const [invalidMessage,setInvalidMessage]=useState<any>()
 
   const { submit, loading, error } = useAuth<RegisterPayload>({
     path: "/user/register",
@@ -43,9 +44,9 @@ export default function Register() {
         password,
         role,
       });
-      console.log('ok',res)
       navigate("/login");
-    } catch (err) {
+    } catch (err:any) {
+      setInvalidMessage(err.message)
       if (error === "User already exists") {
         setUserExists(true);
       }
@@ -86,6 +87,10 @@ export default function Register() {
           onChange={(e) => setPhone(e.target.value)}
           required
         />
+        {!userExists && invalidMessage && (
+          <p className="text-sm text-red-500 text-center">
+            {invalidMessage}
+          </p>)}
 
         <Input
           type="email"
@@ -102,7 +107,7 @@ export default function Register() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-
+        
         {userExists && (
           <p className="text-sm text-red-500 text-center">
             User already exists

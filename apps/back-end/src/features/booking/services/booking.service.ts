@@ -45,6 +45,7 @@ export class BookingService extends BaseService<BookingEntity> {
     const endTime = new Date(dto.endTime);
     const overlappingBooking = await this.bookingRepository.findOne({
       where: {
+        location,
         startTime: LessThan(endTime),
         endTime: MoreThan(startTime),
       },
