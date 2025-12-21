@@ -17,7 +17,7 @@ import { Module } from '@nestjs/common';
           username: configService.get<string>(ENV_KEYS.DB_USERNAME),
           database: configService.get<string>(ENV_KEYS.DB_NAME),
           autoLoadEntities: true,
-          synchronize: false,
+          synchronize: true,
           logging: true,
         };
       },
