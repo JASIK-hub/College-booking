@@ -3,14 +3,15 @@ import nodemailer from 'nodemailer';
 import { ENV_KEYS } from '../config/env-keys';
 
 export class SendEmail {
-  constructor(private configSerice: ConfigService) {}
+  constructor(private configService: ConfigService) {}
   async sendCodeEmail(email: string, code: string) {
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
+      port: 465,
+      secure: true,
       auth: {
-        user: this.configSerice.get(ENV_KEYS.EMAIL),
-        pass: this.configSerice.get(ENV_KEYS.EMAIL_PASSWORD),
+        user: this.configService.get(ENV_KEYS.EMAIL),
+        pass: this.configService.get(ENV_KEYS.EMAIL_PASSWORD),
       },
     });
 

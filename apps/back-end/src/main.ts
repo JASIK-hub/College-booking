@@ -11,6 +11,13 @@ import { ENV_KEYS } from './core/config/env-keys';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  app.enableCors({
+    origin: 'https://college-booking-ynnp.vercel.app',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true,
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -27,10 +34,6 @@ async function bootstrap() {
       cookie: { maxAge: 5 * 60 * 1000 },
     }),
   );
-  app.enableCors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-  });
   const seed = app.get(LocationSeed);
   await seed.run();
 
