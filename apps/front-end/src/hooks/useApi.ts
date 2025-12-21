@@ -22,7 +22,6 @@ export function useApi() {
         },
         body: body ? JSON.stringify(body) : undefined,
       });
-
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.message || "Ошибка запроса");

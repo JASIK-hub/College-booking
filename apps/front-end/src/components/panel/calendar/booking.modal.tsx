@@ -9,7 +9,7 @@ interface BookingModalProps {
   startTime: Date;
   endTime: Date;
   location: string;
-  error:any
+  error: any;
 }
 
 export const BookingModal: React.FC<BookingModalProps> = ({
@@ -19,7 +19,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   startTime: initialStartTime,
   endTime: initialEndTime,
   location,
-  error
+  error,
 }) => {
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState(format(initialStartTime, "HH:mm"));
@@ -27,17 +27,27 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
-    const [startHour, startMinute] = startTime.split(":").map(Number);
-    const [endHour, endMinute] = endTime.split(":").map(Number);
-    
-    const newStartTime = new Date(initialStartTime);
-    newStartTime.setHours(startHour, startMinute, 0, 0);
-    
-    const newEndTime = new Date(initialEndTime);
-    newEndTime.setHours(endHour, endMinute, 0, 0);
+  // ✅ Преобразуем выбранное время в локальное (КЗ) для отправки
+  const convertToKZTime = (date: Date, timeString: string): Date => {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    const newDate = new Date(date);
+    newDate.setHours(hours);
+    newDate.setMinutes(minutes);
+    newDate.setSeconds(0);
+    newDate.setMilliseconds(0);
+    return newDate;
+  };
 
-    onConfirm(description, newStartTime, newEndTime);
+  const handleSubmit = () => {
+    const newStartTimeKZ = convertToKZTime(initialStartTime, startTime);
+    const newEndTimeKZ = convertToKZTime(initialEndTime, endTime);
+
+    console.log("Local start time:", startTime);
+    console.log("KZ start time (to send):", newStartTimeKZ.toISOString());
+    console.log("Local end time:", endTime);
+    console.log("KZ end time (to send):", newEndTimeKZ.toISOString());
+
+    onConfirm(description, newStartTimeKZ, newEndTimeKZ);
     setDescription("");
   };
 
@@ -60,13 +70,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <p className="text-sm text-gray-500 mb-1">Место</p>
             <p className="text-lg font-semibold text-gray-900">{location}</p>
           </div>
-          
+
           <div>
             <p className="text-sm text-gray-500 mb-2">Дата и время</p>
             <p className="text-lg font-semibold text-gray-900 mb-3">
               {format(initialStartTime, "dd MMMM yyyy", { locale: ru })}
             </p>
-            
+
             <div className="flex items-center gap-3">
               <input
                 type="time"
@@ -127,10 +137,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           </div>
         </div>
 
-        {error &&(<p className="text-xs text-red-500 mt-3 text-center">
-          {error}
-        </p>
-  )}
+        {error && (
+          <p className="text-xs text-red-500 mt-3 text-center">{error}</p>
+        )}
       </div>
     </div>
   );

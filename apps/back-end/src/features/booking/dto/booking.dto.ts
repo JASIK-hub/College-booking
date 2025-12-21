@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsString } from 'class-validator';
-import { LocationsEnum } from 'src/core/db/enums/locations-enum.dto';
+import { LocationsEnum } from 'src/core/db/enums/locations.enum';
 
 export class BookingDto {
   @ApiProperty({

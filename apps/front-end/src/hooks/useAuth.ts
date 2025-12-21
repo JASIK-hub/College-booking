@@ -17,9 +17,9 @@ export function useAuth<TPayload>({ path }: UseAuthOptions) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || "Auth failed");

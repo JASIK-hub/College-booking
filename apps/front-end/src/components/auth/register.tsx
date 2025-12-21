@@ -1,144 +1,202 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Input } from "../ui/search";
-import { Button } from "../ui/button";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useUserContext } from "../../context/user.context";
+import { ChevronLeft, Clock } from "lucide-react";
+import { useApi } from "../../hooks/useApi";
 
 interface RegisterPayload {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  password: string;
-  role: Role;
+  code: string;
 }
 
-type Role = "admin" | "teacher";
-
-export default function Register() {
+export default function CodeLogin() {
   const navigate = useNavigate();
+  const { email } = useUserContext();
+  const [code, setCode] = useState<string[]>(["", "", "", "", "", ""]);
+  const [invalidMessage, setInvalidMessage] = useState<string>("");
+  const [resendTimer, setResendTimer] = useState(0);
+  const {callApi}=useApi()
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userExists, setUserExists] = useState(false);
-  const [role, setRole] = useState<Role>("teacher");
-  const [invalidMessage,setInvalidMessage]=useState<any>()
-
-  const { submit, loading, error } = useAuth<RegisterPayload>({
-    path: "/user/register",
+  const { submit, loading, error, } = useAuth<RegisterPayload>({
+    path: "/user/login",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUserExists(false);
-    
-    try {
-      await submit({
-        firstName,
-        lastName,
-        phone,
-        email,
-        password,
-        role,
-      });
-      navigate("/login");
-    } catch (err:any) {
-      setInvalidMessage(err.message)
-      if (error === "User already exists") {
-        setUserExists(true);
-      }
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
+  const handleChange = (value: string, index: number) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Backspace") {
+      if (code[index]) {
+        const newCode = [...code];
+        newCode[index] = "";
+        setCode(newCode);
+      } else if (index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInvalidMessage("");
+
+    const codeString = code.join("");
+
+    try {
+      const res = await submit({
+        code: codeString,
+      });
+      if (res) {
+        navigate("/main");
+      }
+    } catch (err: any) {
+    }
+  };
+
+   const handleResend = async () => {
+  try {
+    await callApi("/user/generate/code", { email }, "POST"); 
+    setResendTimer(60);
+    setCode(["", "", "", "", "", ""]);
+    inputRefs.current[0]?.focus();
+  } catch (err) {
+  }
+};
+
+  const isCodeComplete = code.every((digit) => digit !== "");
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-lg space-y-5"
-      >
-        {/* Title */}
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Create account
-          </h1>
-          <p className="text-sm text-gray-500">Fill in your details</p>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-gray-50">
+        <div className="max-w-md mx-auto px-6 py-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm font-medium"
+          >
+            <ChevronLeft size={18} />
+            Back
+          </button>
         </div>
+      </div>
 
-        <Input
-          placeholder="First name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          required
-        />
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              Verify your email
+            </h2>
+            <p className="text-sm text-gray-600">
+              We sent a 6-digit code to <br />
+              <span className="font-medium text-gray-900">{email}</span>
+            </p>
+          </div>
 
-        <Input
-          placeholder="Last name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          required
-        />
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* OTP Input */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Code
+              </label>
+              <div className="flex gap-2 justify-between">
+                {code.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleChange(e.target.value, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    disabled={loading}
+                    className="w-10 h-12 text-center text-lg font-semibold
+                      border border-gray-300 rounded-lg
+                      focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-300
+                      disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400
+                      transition-colors duration-200"
+                  />
+                ))}
+              </div>
+            </div>
 
-        <Input
-          placeholder="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-        />
-        {!userExists && invalidMessage && (
-          <p className="text-sm text-red-500 text-center">
-            {invalidMessage}
-          </p>)}
+            {(error || invalidMessage) && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{error || invalidMessage}</p>
+              </div>
+            )}
 
-        <Input
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+            <button
+              type="submit"
+              disabled={!isCodeComplete || loading}
+              className="w-full px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg
+                hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed
+                transition-colors duration-200"
+            >
+              {loading ? "Verifying..." : "Verify"}
+            </button>
+          </form>
 
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        
-        {userExists && (
-          <p className="text-sm text-red-500 text-center">
-            User already exists
+          {/* Resend */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 mb-3">
+              Didn't receive the code?
+            </p>
+            {resendTimer > 0 ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                <Clock size={16} />
+                Try again in {resendTimer}s
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={loading}
+                className="text-sm font-medium text-gray-900 hover:text-gray-700
+                  disabled:text-gray-400 disabled:cursor-not-allowed
+                  transition-colors duration-200"
+              >
+                Resend code
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-gray-200 bg-gray-50">
+        <div className="max-w-md mx-auto px-6 py-4 text-center">
+          <p className="text-xs text-gray-600">
+            © 2025 JIHC. All rights reserved.
           </p>
-        )}
-
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as Role)}
-          className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
-        >
-          <option value="teacher">Teacher</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={loading}
-          className="w-full py-2 rounded-lg"
-        >
-          {loading ? "Creating..." : "Create account"}
-        </Button>
-
-        <p className="text-sm text-center text-gray-500">
-          Already have an account?{" "}
-          <Link to="/login" className="text-black font-medium hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </form>
+        </div>
+      </div>
     </div>
   );
 }

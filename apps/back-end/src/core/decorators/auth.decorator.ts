@@ -1,5 +1,5 @@
 import { ROLES_KEY } from '../guards/role.guard';
-import { RoleEnum } from '../db/enums/role-enum';
+import { RoleEnum } from '../db/enums/role.enum';
 import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';

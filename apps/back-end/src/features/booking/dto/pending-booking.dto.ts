@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsString } from 'class-validator';
 
-export class UpdateBookingDto {
+export class PendingBookingDto {
   @ApiPropertyOptional({ description: 'Описание бронирования' })
   @IsOptional()
   @IsString()
@@ -10,10 +10,11 @@ export class UpdateBookingDto {
   @ApiPropertyOptional({
     description: 'Время начала бронирования',
     example: '2025-12-09T07:00:00Z',
+    nullable: true,
   })
   @IsOptional()
   @IsDateString()
-  startTime?: string;
+  pendingStartTime?: Date | null;
 
   @ApiPropertyOptional({
     description: 'Время окончания бронирования',
@@ -21,5 +22,5 @@ export class UpdateBookingDto {
   })
   @IsOptional()
   @IsDateString()
-  endTime?: string;
+  pendingEndTime?: Date | null;
 }

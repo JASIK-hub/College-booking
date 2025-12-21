@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { LocationEntity } from './location.entity';
+import { BookingStatusEnum } from '../enums/booking-status.enum';
 
 @Entity('booking')
 export class BookingEntity {
@@ -31,6 +32,12 @@ export class BookingEntity {
   @Column({ type: 'timestamp' })
   endTime: Date;
 
-  @Column()
-  status: 'booked' | 'free';
+  @Column({ type: 'enum', enum: BookingStatusEnum })
+  status: BookingStatusEnum;
+
+  @Column({ type: 'timestamp', nullable: true })
+  pendingStartTime?: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  pendingEndTime?: Date | null;
 }

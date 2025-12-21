@@ -1,31 +1,23 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { RoleEnum } from '../enums/role.enum';
+import { NotificationEntity } from './notification.entity';
 import { BookingEntity } from './booking.entity';
-import { Exclude } from 'class-transformer';
-import { RoleEnum } from '../enums/role-enum';
 
 @Entity('user')
 export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ type: 'varchar', nullable: false })
-  firstName: string;
-
-  @Column({ type: 'varchar', nullable: false })
-  lastName: string;
+  @Column({})
+  name: string;
 
   @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true, select: false })
-  @Exclude()
-  password: string;
-
-  @Column()
-  phone: string;
-
   @Column({ nullable: false, enum: RoleEnum })
   role: RoleEnum;
+
+  @OneToMany(() => NotificationEntity, (notification) => notification.user)
+  notifications: NotificationEntity[];
 
   @OneToMany(() => BookingEntity, (booking) => booking.user)
   bookings: BookingEntity[];

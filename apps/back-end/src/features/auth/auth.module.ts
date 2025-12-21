@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,13 +7,15 @@ import { TokenGenerationService } from './services/token.service';
 import { RedisTokenService } from './services/redis.service';
 import { UserController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
-import { UserService } from './services/user.service';
 import { ENV_KEYS } from 'src/core/config/env-keys';
+import { SheetsModule } from '../sheets/sheets.module';
+import { UserService } from './services/user.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity]),
     ConfigModule,
+    forwardRef(() => SheetsModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

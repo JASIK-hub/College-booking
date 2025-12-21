@@ -43,7 +43,7 @@ export const CalendarEvent = ({ event }: any) => (
     }}
   >
     <span style={{ textAlign: "left", fontSize: "12px" }}>
-      {event.title}
+      {event.author}
     </span>
   </div>
 );

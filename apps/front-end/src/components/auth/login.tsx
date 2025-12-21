@@ -1,95 +1,119 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { Input } from "../ui/search";
-import { Button } from "../ui/button";
 import { useAuth } from "../../hooks/useAuth";
-import Spinner from "../ui/spinner";
+import { useUserContext } from "../../context/user.context";
+import { Mail, ArrowRight } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { email, setEmail } = useUserContext();
 
   const { submit, loading, error } = useAuth({
-    path: `/user/login`,
+    path: `/user/generate/code`,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await submit({ email, password });
-    
+    const result = await submit({ email });
+
     if (result && !error) {
-      localStorage.setItem('isAuthenticated', 'true');
-      navigate("/main");
+      navigate("/login/code");
     }
   };
 
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-lg space-y-6"
-      >
-        {/* Title */}
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
-          <p className="text-sm text-gray-500">Sign in to your account</p>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-gray-50">
+        <div className="max-w-md mx-auto px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-900">JIHC System</h1>
         </div>
+      </div>
 
-        {/* Email */}
-        <Input
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full px-4 py-2 rounded-lg border border-gray-300
-            focus:border-black focus:ring-1 focus:ring-black outline-none
-            transition"
-        />
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Content */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              Sign in
+            </h2>
+            <p className="text-sm text-gray-600">
+              Enter your institutional email to continue
+            </p>
+          </div>
 
-        {/* Password */}
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full px-4 py-2 rounded-lg border border-gray-300
-            focus:border-black focus:ring-1 focus:ring-black outline-none
-            transition"
-        />
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Input */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="relative">
+                <Mail
+                  size={18}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="email"
+                  placeholder="name@jihc.edu.kz"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-300
+                    transition-colors duration-200"
+                />
+              </div>
+            </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={loading}
-          className="w-full py-2 rounded-lg font-medium transition
-                    flex items-center justify-center gap-2
-                    disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <>
-              <Spinner />
-              Signing in...
-            </>
-          ) : (
-            "Sign in"
-          )}
-        </Button>
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
 
-        <p className="text-sm text-center text-gray-500">
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-black font-medium hover:underline"
-          >
-            Sign up
-          </Link>
-        </p>
-      </form>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              // disabled={loading || !isValidEmail}
+              className="w-full px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg
+                hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed
+                transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Sending code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Continue</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-gray-500">
+              Only institutional emails allowed
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Info */}
+      <div className="border-t border-gray-200 bg-gray-50">
+        <div className="max-w-md mx-auto px-6 py-4 text-center">
+          <p className="text-xs text-gray-600">
+            © 2025 JIHC. All rights reserved.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -7,9 +7,10 @@ import { BookingModule } from './features/booking/booking.module';
 import { LocationSeed } from './core/seeds/location.seed';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LocationEntity } from './core/db/entities/location.entity';
+import { UserEntity } from './core/db/entities/user.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([LocationEntity]),
+    TypeOrmModule.forFeature([UserEntity, LocationEntity]),
     ConfigModule.forRoot({ isGlobal: true }),
     DBModule,
     RedisCacheModule,

@@ -1,89 +1,106 @@
-import bcrypt from 'bcryptjs';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ENV_KEYS } from 'src/core/config/env-keys';
 import { TokenGenerationService } from './token.service';
-import { UserService } from './user.service';
-import { UserLoginDto } from '../dto/login.dto';
-import { GenerateTokenDto } from '../dto/generate-token.dto';
+import { GenerateCodeDto } from '../dto/generate-code.dto';
 import { UserDto } from '../dto/user.dto';
+import { LoginDto } from '../dto/login.dto';
+import { SetCode } from 'src/core/helpers/set-code.helper';
+import { RedisService } from '@liaoliaots/nestjs-redis';
+import { SendEmail } from 'src/core/helpers/send-email.helper';
+import { Request } from 'express';
+import { RoleEnum } from 'src/core/db/enums/role.enum';
+import { FetchSheetsService } from 'src/features/sheets/services/sheets.service';
+import { ENV_KEYS } from 'src/core/config/env-keys';
 @Injectable()
 export class AuthService {
   constructor(
-    private userService: UserService,
     private configService: ConfigService,
     private tokenService: TokenGenerationService,
+    private redisService: RedisService,
+    private sheetsSerivce: FetchSheetsService,
   ) {}
-  async registerUser(dto: UserDto) {
-    const userExists = await this.userService.findOneBy({
-      email: dto.email,
-      firstName: dto.firstName,
-    });
-    if (userExists) {
-      throw new BadRequestException('User already exists');
+  async generateCode(dto: GenerateCodeDto, req: Request) {
+    //YOY MAY CHANGE THIS IF NEEDED
+    const allowedDomen = this.configService.get(ENV_KEYS.ALLOWED_DOMEN);
+    const exceptionEmail = this.configService.get(ENV_KEYS.EXCEPTIONAL_DOMEN);
+    const users = await this.sheetsSerivce.getUsers();
+    const userExists = users.some((user) => dto.email == user.email);
+    const domen = dto.email.split('@')[1];
+    if (dto.email !== exceptionEmail && domen !== allowedDomen) {
+      throw new BadRequestException(
+        `Email должен быть с доменом ${allowedDomen}`,
+      );
     }
-    const hashedPassword = await this.hashPassword(dto.password);
-    await this.userService.createOne({
-      ...dto,
-      password: hashedPassword,
-    });
-    return await this.userService.findOneBy({ email: dto.email });
+    if (!userExists) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    (req.session as any).user = { email: dto.email };
+    const code = await new SetCode(this.redisService).setCodeToRedis();
+    await new SendEmail(this.configService).sendCodeEmail(dto.email, code);
+    return true;
   }
-  async loginUser(dto: UserLoginDto) {
-    const user = await this.userService.findOne(undefined, {
-      where: { email: dto.email },
-      select: ['id', 'email', 'password'],
-    });
-    if (!user) {
-      throw new UnauthorizedException('User is not authorized');
+
+  async login(dto: LoginDto, req: Request) {
+    const sessionUser = (req as any).session?.user;
+    if (!sessionUser?.email) {
+      throw new BadRequestException('Код исчерпан используйте другой');
     }
-    await this.validatePassword(dto.password, user.password);
-    const userPayload: GenerateTokenDto = {
-      id: user.id,
-      role: user.role,
+    const email = sessionUser.email;
+    const users = await this.sheetsSerivce.getUsers();
+    const user = users.find((user) => email == user.email);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    const allowedDomen = this.configService.get(ENV_KEYS.ALLOWED_DOMEN);
+    const exceptionEmail = this.configService.get(ENV_KEYS.EXCEPTIONAL_DOMEN);
+    const domen = email.split('@')[1];
+    if (email !== exceptionEmail && domen !== allowedDomen) {
+      throw new BadRequestException(
+        `Email должен быть с доменом ${allowedDomen}`,
+      );
+    }
+    const validCode = await new SetCode(this.redisService).getCodeFromRedis(
+      dto.code,
+    );
+    if (!validCode) {
+      throw new BadRequestException('Код не соответсвует');
+    }
+
+    const userRole = user.role == 'teacher' ? RoleEnum.TEACHER : RoleEnum.ADMIN;
+    const userPayload: UserDto = {
+      role: userRole,
       email: user.email,
     };
     return await this.tokenService.generateTokens(userPayload);
   }
 
-  async getSingleUserInfo(userId: number) {
-    const user = await this.userService.findOneBy({ id: userId });
+  async getSingleUserInfo(req: Request) {
+    const email = (req as any).user.identifier;
+    const users = await this.sheetsSerivce.getUsers();
+    const user = users.find((user) => email == user.email);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Пользователь не найден');
     }
     return user;
   }
-  async getAllUsersInfo() {
-    const users = await this.userService.findAll();
-    if (!users) {
-      throw new NotFoundException('No users found');
-    }
-    return users;
-  }
-  async changeUserInfo(userId: number, dto: UserDto) {
-    let user = await this.userService.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    this.userService.updateOne(userId, dto);
-    return await this.userService.findOneBy({ id: userId });
-  }
-
-  async hashPassword(password: string) {
-    const salt = await bcrypt.genSalt(
-      Number(this.configService.get(ENV_KEYS.PASSWORD_HASH)),
-    );
-    return await bcrypt.hash(password, salt);
-  }
-  async validatePassword(password: string, userPassword: string) {
-    const isPasswordValid = await bcrypt.compare(password, userPassword);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
-  }
+  // async getAllUsersInfo() {
+  //   const users = await this.userService.findAll();
+  //   if (!users) {
+  //     throw new NotFoundException('Пользователь не найден');
+  //   }
+  //   return users;
+  // }
+  // async changeUserInfo(userId: number, dto: UserDto) {
+  //   let user = await this.userService.findOneBy({ id: userId });
+  //   if (!user) {
+  //     throw new NotFoundException('Пользователь не найден');
+  //   }
+  //   this.userService.updateOne(userId, dto);
+  //   return await this.userService.findOneBy({ id: userId });
+  // }
 }

@@ -9,31 +9,30 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ENV_KEYS } from 'src/core/config/env-keys';
 import { RedisTokenService } from './redis.service';
-import { UserService } from './user.service';
-import { GenerateTokenDto } from '../dto/generate-token.dto';
+import { UserDto } from '../dto/user.dto';
+import { FetchSheetsService } from 'src/features/sheets/services/sheets.service';
 
 @Injectable()
 export class TokenGenerationService {
   constructor(
-    private userService: UserService,
     private configService: ConfigService,
     private jwtService: JwtService,
     @Inject(forwardRef(() => RedisTokenService))
     private redisService: RedisTokenService,
+    private sheetsSerice: FetchSheetsService,
   ) {}
-  async generateTokens(dto: GenerateTokenDto) {
-    const userData = await this.userService.findOne(dto.id);
+  async generateTokens(dto: UserDto) {
+    const users = await this.sheetsSerice.getUsers();
+    const userData = users.find((user) => user.email == dto.email);
     if (!userData) {
       throw new NotFoundException('Пользователь не найден');
     }
     const payloadAccess = {
-      id: userData.id,
       identifier: userData.email,
       role: userData.role,
       type: 'access',
     };
     const payloadRefresh = {
-      id: userData.id,
       identifier: userData.email,
       role: userData.role,
       type: 'refresh',

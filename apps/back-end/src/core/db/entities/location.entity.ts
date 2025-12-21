@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { LocationsEnum } from '../enums/locations.enum';
 import { BookingEntity } from './booking.entity';
-import { LocationsEnum } from '../enums/locations-enum.dto';
 
 @Entity('location')
 export class LocationEntity {
